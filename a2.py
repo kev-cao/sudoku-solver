@@ -44,9 +44,12 @@ class Board():
                         self.n2 = len(row)
                         self.spaces = self.n ** 4
                         self.board = {}
+                        # set() for _ in range(self.n2) creates an empty set n2 times and makes a list of those sets.
                         self.valsInRows = [set() for _ in range(self.n2)]
                         self.valsInCols = [set() for _ in range(self.n2)]
                         self.valsInBoxes = [set() for _ in range(self.n2)]
+
+                        # itertools.product(p1, p2) returns the cartesian product of p1 and p2. So unsolvedSpaces is just a set containing values from 0 to (n2 - 1)^2.
                         self.unsolvedSpaces = set(itertools.product(range(self.n2), range(self.n2)))
 
                 # check if each row has the correct number of values
@@ -113,25 +116,55 @@ class Board():
 
     # makes a move, records it in its row, col, and box, and removes the space from unsolvedSpaces
     def makeMove(self, space, value):
-        raise NotImplementedError
+        self.board[space] = value
+        self.valsInRows[space[0]].add(value)
+        self.valsInCols[space[1]].add(value)
+        self.valsInBoxes[self.spaceToBox(space[0], space[1])].add(value)
+        self.unsolvedSpaces.remove(space)
 
     # removes the move, its record in its row, col, and box, and adds the space back to unsolvedSpaces
     def undoMove(self, space, value):
-        raise NotImplementedError
+        del self.board[space]
+        self.valsInRows[space[0]].remove(value)
+        self.valsInCols[space[1]].remove(value)
+        self.valsInBoxes[self.spaceToBox(space[0], space[1])].remove(value)
+        self.unsolvedSpaces.add(space)
 
     # returns True if the space is empty and on the board,
     # and assigning value to it if not blocked by any constraints
     def isValidMove(self, space, value):
-        raise NotImplementedError
+        if space[0] < self.n2 and space[1] < self.n2:
+            empty = space not in self.board
+            not_in_row = value not in self.valsInRows[space[0]]
+            not_in_col = value not in self.valsInCols[space[1]]
+            not_in_box = value not in self.valsInBoxes[self.spaceToBox(space[0], space[1])]
+            return empty and not_in_row and not_in_col and not_in_box
+        return False
+
 
     # optional helper function for use by getMostConstrainedUnsolvedSpace
     def evaluateSpace(self, space):
-        raise NotImplementedError
+        options = []
+
+        # Check validity of every number in space. isValidMove should run in O(1) time since we are using sets.
+        for i in range(self.n2):
+           if self.isValidMove(space, i + 1):
+               options.append(i + 1)
+
+        return options
 
     # gets the unsolved space with the most current constraints
     # returns None if unsolvedSpaces is empty
     def getMostConstrainedUnsolvedSpace(self):
-        raise NotImplementedError
+        min_valid = self.n
+        min_space = None
+        for space in self.unsolvedSpaces:
+            valid_options = len(self.evaluateSpace(space))
+            if (valid_options < min_valid):
+                min_space = space
+                min_valid = valid_options
+
+        return min_space
 
 class Solver:
     ##########################################
@@ -152,8 +185,21 @@ class Solver:
 
     # returns True if a solution exists and False if one does not
     def solveBoard(self, board):
-        raise NotImplementedError
+        curr_space = board.getMostConstrainedUnsolvedSpace()
 
+        if curr_space is not None:
+            options = board.evaluateSpace(curr_space)
+
+            for option in options:
+                board.makeMove(curr_space, option)
+                if self.solveBoard(board):
+                    return True
+                else:
+                    board.undoMove(curr_space, option)
+
+            return False
+        else:
+            return len(board.unsolvedSpaces) == 0
 
 if __name__ == "__main__":
     # change this to the input file that you'd like to test
