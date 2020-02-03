@@ -133,7 +133,7 @@ class Board():
     # returns True if the space is empty and on the board,
     # and assigning value to it if not blocked by any constraints
     def isValidMove(self, space, value):
-        if space[0] < self.n2 and space[1] < self.n2:
+        if space[0] < self.n2 and space[0] >= 0 and space[1] < self.n2 and space[1] >= 0:
             empty = space not in self.board
             not_in_row = value not in self.valsInRows[space[0]]
             not_in_col = value not in self.valsInCols[space[1]]
@@ -156,7 +156,7 @@ class Board():
     # gets the unsolved space with the most current constraints
     # returns None if unsolvedSpaces is empty
     def getMostConstrainedUnsolvedSpace(self):
-        min_valid = self.n
+        min_valid = self.n + 1
         min_space = None
         for space in self.unsolvedSpaces:
             valid_options = len(self.evaluateSpace(space))
@@ -203,7 +203,7 @@ class Solver:
 
 if __name__ == "__main__":
     # change this to the input file that you'd like to test
-    board = Board('tests/example.csv')
+    board = Board('tests/test-3-hard/18.csv')
     s = Solver()
     s.solveBoard(board)
     board.print()
