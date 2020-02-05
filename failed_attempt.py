@@ -3,13 +3,6 @@ import itertools
 import cProfile
 
 
-''' Here is the plan for optimizing the code. At the moment, after each decision, we have to reevaluate the "value" of each cell (max number of constraints, or conversely, minimum number of available options). This leads to incredibly large amount of redundant calculations, however. If I try a value at cell c, then I only need to update the values of the cells in the box containing c, and in the row/column of c. To do this, I think it is best that I map cells to a list of valid options to keep track of how constrained the cells are. And from there, I will no longer to have to recalculate the options for each cell after every action. Instead, I only have to update cells that will be affected by filling in a given cell.
-
-Upon trying out storing the valid options for a cell in a mapping data structures, I noticed about an 80% decrease in running time. However, it still is not significant enough to actually solve harder problems. With that in mind, I want to try implementing a more "human" logic to this. Whenever I do a sudoku board, and I don't find a cell with a single valid option, I check the other cells in the row/col/box and see if there is a shared value they cannot store. If they cannot store that shared value, then that cell must store the value. For example, in a 9x9 board, every row/col/box must store a 5. If cell X has multiple options including 5, and all the other cells in the same row/box/col do not have 5 as a valid option, then cell X must contain 5 and I can ignore all the other options.
-
-Whenever a random value is attempted, then try out the logical deduction on the current state of the board over and over again until no more deductions can be made and return a list of all cells that were modified. If the current path fails, then undo all modifications.
- '''
-
 class Board:
     def __init__(self, filename):
         self.n = 0
@@ -22,11 +15,6 @@ class Board:
         self.vals_in_rows = None
         self.vals_in_cols = None
         self.vals_in_boxes = None
-
-        # A mapping from a row/col/box # to a list of cells in that section.
-        self.cells_in_rows = None
-        self.cells_in_cols = None
-        self.cells_in_boxes = None
 
         # A set of unsolved board spaces.
         self.unsolved_cells = None
@@ -53,29 +41,9 @@ class Board:
                     self.vals_in_rows = [set() for i in range(self.n2)]
                     self.vals_in_cols = [set() for i in range(self.n2)]
                     self.vals_in_boxes = [set() for i in range(self.n2)]
-                    self.cells_in_rows = [[] for i in range(self.n2)]
-                    self.cells_in_cols = [[] for i in range(self.n2)]
-                    self.cells_in_boxes = [[] for i in range(self.n2)]
-
                     self.unsolved_cells = set(itertools.product(range(self.n2), range(self.n2)))
                     self.legal_options = {}
                     self.static_cells = set()
-
-                    # Add all cells to the correct row/col/box section.
-                    for row_num in range(self.n2):
-                        for col_num in range(self.n2):
-                            self.cells_in_rows[row_num].append((row_num, col_num))
-
-                    for col_num in range(self.n2):
-                        for row_num in range(self.n2):
-                            self.cells_in_cols[col_num].append((row_num, col_num))
-
-                    for box_num in range(self.n2):
-                        first_row = (box_num // self.n) * self.n
-                        first_col = (box_num % self.n) * self.n
-
-                        for i in range(self.n2):
-                            self.cells_in_boxes[box_num].append((first_row + i // self.n, first_col + i % self.n))
 
                 for col_num, item in enumerate(row):
                     val = 0 if item == '' else int(item)
@@ -84,7 +52,6 @@ class Board:
                     self.board[(row_num, col_num)] = val
                     self.legal_options[(row_num, col_num)] = [False for i in range(self.n2)]
 
-
                     # If there is a value, mark it in its respective row/col/box
                     if val != 0:
                         self.vals_in_rows[row_num].add(val)
@@ -92,7 +59,6 @@ class Board:
                         self.vals_in_boxes[self.get_box_num((row_num, col_num))].add(val)
                         self.unsolved_cells.remove((row_num, col_num))
                         self.static_cells.add((row_num, col_num))
-
 
             # Fill in legal_options for every unsolved cell.
             for cell in self.unsolved_cells:
@@ -148,52 +114,60 @@ class Board:
 
     # Places a given value in a given cell.
     def make_move(self, cell, value):
-        if cell in self.unsolved_cells:
-            self.board[cell] = value
-            self.vals_in_rows[cell[0]].add(value)
-            self.vals_in_cols[cell[1]].add(value)
-            self.vals_in_boxes[self.get_box_num(cell)].add(value)
-            self.unsolved_cells.remove(cell)
-            self.update_options_fill(cell, value)
+        self.board[cell] = value
+        self.vals_in_rows[cell[0]].add(value)
+        self.vals_in_cols[cell[1]].add(value)
+        self.vals_in_boxes[self.get_box_num(cell)].add(value)
+        self.unsolved_cells.remove(cell)
+        self.update_options_fill(cell, value)
 
 
     # Cleans out a given cell and makes it empty.
     def undo_move(self, cell):
-        if cell not in self.unsolved_cells:
-            prev_val = self.board[cell]
-            self.board[cell] = 0
-            self.vals_in_rows[cell[0]].discard(prev_val)
-            self.vals_in_cols[cell[1]].discard(prev_val)
-            self.vals_in_boxes[self.get_box_num(cell)].discard(prev_val)
-            self.unsolved_cells.add(cell)
-            self.update_options_clear(cell, prev_val)
+        prev_val = self.board[cell]
+        self.board[cell] = 0
+        self.vals_in_rows[cell[0]].remove(prev_val)
+        self.vals_in_cols[cell[1]].remove(prev_val)
+        self.vals_in_boxes[self.get_box_num(cell)].remove(prev_val)
+        self.unsolved_cells.add(cell)
+        self.update_options_clear(cell, prev_val)
 
-    # Cleans out every cell in a set of cells.
+    # Cleans out every cell in a list of cells.
     def undo_all_moves(self, cells):
         for cell in cells:
             self.undo_move(cell)
 
-        # Since the cells are removed sequentially, then their legal_options have to be recalculated. If cell A is removed before cell B, cell A's legal_options doesn't account for the fact that cell B will be removed.
-        for cell in cells:
-            self.recalculate_options(cell)
-
-    # Recalculates the legal options for a given cell.
-    def recalculate_options(self, cell):
-        for index in range(self.n2):
-            if self.is_legal_move(cell, index + 1):
-                self.legal_options[cell][index] = True
-
     # Gets all the cells in a given box number.
     def get_box(self, box_num):
-        return self.cells_in_boxes[box_num]
+        first_row = (box_num // self.n) * self.n
+        first_col = (box_num % self.n) * self.n
+
+        cells = set()
+        for i in range(self.n2):
+            cell = (first_row + i // self.n, first_col + i % self.n)
+            cells.add(cell)
+
+        return cells
 
     # Gets all the cells in a given row.
     def get_row(self, row_num):
-        return self.cells_in_rows[row_num]
+        cells = set()
+
+        for col_num in range(self.n2):
+            cell = (row_num, col_num)
+            cells.add((row_num, col_num))
+
+        return cells
 
     # Gets all the cells in a given column.
     def get_col(self, col_num):
-        return self.cells_in_cols[col_num]
+        cells = set()
+
+        for row_num in range(self.n2):
+            cell = (row_num, col_num)
+            cells.add((row_num, col_num))
+
+        return cells
 
     # Get the cell with the most constraints (conversely, least legal options).
     def get_most_constrained_cell(self):
@@ -256,15 +230,6 @@ class Solver:
         pass
 
     def solveBoard(self, board):
-        # Step deduce is a list of all modified cells after doing logical deduction once.
-        step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
-        deduced_cells = step_deduce
-
-        # repeatedly do logical deduction until no more can be done.
-        while len(step_deduce) != 0:
-            step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
-            deduced_cells = deduced_cells.union(step_deduce)
-
         curr_cell = board.get_most_constrained_cell()
 
         if curr_cell is not None:
@@ -279,105 +244,102 @@ class Solver:
                     else:
                         board.undo_move(curr_cell)
 
-            board.undo_all_moves(deduced_cells)
             return False
         else:
-            ret = len(board.unsolved_cells) == 0
+            return len(board.unsolved_cells) == 0
 
-            if not ret:
-                board.undo_all_moves(deduced_cells)
 
-            return ret
-
-    def deduce_rows(self, board):
-        # A collection of all modified cells.
-        modified_cells = set()
-
+    def deduce_rows(self, board, valid_options):
         for row in range(board.n2):
-            # Counts how many cells have option (i + 1) [i is index] as a legal option.
-            options_count = [0 for i in range(board.n2)]
-
-            # Maps an option to the last cell that had it as a legal option.
+            options_count = [0 for i in range(board.n2 + 1)]
             last_cell_for_option = {}
 
-            # Count options for all cells in row.
             for col in range(board.n2):
                 cell = (row, col)
 
-                if cell in board.unsolved_cells:
-                    for index, is_legal in enumerate(board.get_options(cell)):
-                        if is_legal:
-                            options_count[index] += 1
-                            last_cell_for_option[index + 1] = cell
+                for opt in valid_options[cell]:
+                    options_count[opt] += 1
+                    last_cell_for_option[opt] = cell
 
-            # If you find an option that only had one cell as its possible location, make a move there.
-            for index, count in enumerate(options_count):
-                if count == 1:
-                    certain_cell = last_cell_for_option[index + 1]
-                    modified_cells.add(certain_cell)
-                    board.make_move(certain_cell, index + 1)
+                for option, count in enumerate(options_count):
+                    if count == 1:
+                        board.makeMove(last_cell_for_option[option], option)
 
-        return modified_cells
-
-    def deduce_cols(self, board):
-        # A collection of all modified cells.
-        modified_cells = set()
-
+    def deduce_columns(self, board, valid_options):
         for col in range(board.n2):
-            # Counts how many cells have option (i + 1) [i is index] as a legal option.
-            options_count = [0 for i in range(board.n2)]
-
-            # Maps an option to the last cell that had it as a legal option.
+            options_count = [0 for i in range(board.n2 + 1)]
             last_cell_for_option = {}
 
-            # Count options for all cells in col.
             for row in range(board.n2):
                 cell = (row, col)
 
-                if cell in board.unsolved_cells:
-                    for index, is_legal in enumerate(board.get_options(cell)):
-                        if is_legal:
-                            options_count[index] += 1
-                            last_cell_for_option[index + 1] = cell
+                for opt in valid_options[cell]:
+                    options_count[opt] += 1
+                    last_cell_for_option[opt] = cell
 
-            # If you find an option that only had one cell as its possible location, make a move there.
-            for index, count in enumerate(options_count):
-                if count == 1:
-                    certain_cell = last_cell_for_option[index + 1]
-                    modified_cells.add(certain_cell)
-                    board.make_move(certain_cell, index + 1)
-
-        return modified_cells
+                for option, count in enumerate(options_count):
+                    if count == 1:
+                        board.makeMove(last_cell_for_option[option], option)
 
 
-    def deduce_boxes(self, board):
-        # A collection of all modified cells.
-        modified_cells = set()
-
+    def deduce_box(self, board, valid_options):
         for box_num in range(board.n2):
-            # Counts how many cells have option (i + 1) [i is index] as a legal option.
-            options_count = [0 for i in range(board.n2)]
-
-            # Maps an option to the last cell that had it as a legal option.
+            options_count = [0 for i in range(board.n2 + 1)]
             last_cell_for_option = {}
 
-            # Count options for all cells in box.
             for cell in board.get_box(box_num):
-                if cell in board.unsolved_cells:
-                    for index, is_legal in enumerate(board.get_options(cell)):
-                        if is_legal:
-                            options_count[index] += 1
-                            last_cell_for_option[index + 1] = cell
+                for opt in valid_options[cell]:
+                    options_count[opt] += 1
+                    last_cell_for_option[opt] = cell
 
-            # Ifyou find an option that only had one cell as its possible location, make a move there.
-            for index, count in enumerate(options_count):
+            for option, count in enumerate(options_count):
                 if count == 1:
-                    certain_cell = last_cell_for_option[index + 1]
-                    modified_cells.add(certain_cell)
-                    board.make_move(certain_cell, index + 1)
+                    board.makeMove(last_cell_for_option[option], option)
 
-        return modified_cells
+    def fill_valid_options(self, board, valid_options):
+        for cell in board.unsolved_cells:
+            for i in range(1, board.n2 + 1):
+                if board.is_legal_move(cell, i):
+                   valid_options[cell].add(i)
 
+    def update_options_on_fill(self, board, valid_options, cell, value):
+        for r_cell in board.get_row(cell[0]):
+            if r_cell in board.unsolved_cells:
+                valid_options[r_cell].discard(value)
+
+        for c_cell in board.get_col(cell[1]):
+            if c_cell in board.unsolved_cells:
+                valid_options[c_cell].discard(value)
+
+        for b_cell in board.get_box(board.get_box_num(cell)):
+            if b_cell in board.unsolved_cells:
+                valid_options[b_cell].discard(value)
+
+    def update_options_on_clear(self, board, valid_options, cell, value):
+        for r_cell in board.get_row(cell[0]):
+            if r_cell in board.unsolved_cells and board.is_legal_move(r_cell, value):
+                valid_options[r_cell].add(value)
+
+        for c_cell in board.get_col(cell[1]):
+            if c_cell in board.unsolved_cells and board.is_legal_move(c_cell, value):
+                valid_options[c_cell].add(value)
+
+        for b_cell in board.get_box(board.get_box_num(cell)):
+            if b_cell in board.unsolved_cells and board.is_legal_move(b_cell, value):
+                valid_options[b_cell].add(value)
+
+    def get_most_constrained_cell(self, board, valid_options):
+        min_options = board.n2 + 1
+        min_cell = None
+
+        for cell in board.unsolved_cells:
+            num_options = len(valid_options[cell])
+
+            if num_options < min_options:
+                min_options = num_options
+                min_cell = cell
+
+        return cell
 
 def test_board(board):
     for row in range(board.n2):
@@ -386,8 +348,8 @@ def test_board(board):
             cell = (row, col)
             vals[board.board[cell] - 1] += 1
             if vals[board.board[cell] - 1] > 1:
-                print("Error in row @ %s" % str(cell))
-                return
+                print("Error in row")
+                return cell
 
     for col in range(board.n2):
         vals = [0 for i in range(board.n2)]
@@ -395,8 +357,8 @@ def test_board(board):
             cell = (row, col)
             vals[board.board[cell] - 1] += 1
             if vals[board.board[cell] - 1] > 1:
-                print("Error in col @ %s" % str(cell))
-                return
+                plint("Error in col")
+                return cell
 
     for box_num in range(board.n2):
         vals = [0 for i in range(board.n2)]
@@ -407,14 +369,23 @@ def test_board(board):
             cell = (first_row + i // board.n, first_col + i % board.n)
             vals[board.board[cell] - 1] += 1
             if vals[board.board[cell] - 1] > 1:
-                print("Error in box @ %s" % str(cell))
-                return
+                print("Error in box")
+                return cell
 
+    return None
 
 if __name__ == "__main__":
     # change this to the input file that you'd like to test
-    board = Board('tests/test-6-ridiculous/04.csv')
+    board = Board('tests/test-3-hard/12.csv')
+    board.print()
+    print("=================")
     s = Solver()
     #s.solveBoard(board)
-    cProfile.run("s.solveBoard(board)", sort="tottime")
+   cProfile.run("s.solveBoard(board)", sort="tottime")
     board.print()
+
+    cell = test_board(board)
+    if cell is None:
+        print("Proper board.")
+    else:
+        print("BAD BOARD AT %s" % str(cell))
