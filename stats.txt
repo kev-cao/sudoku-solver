@@ -1,64 +1,49 @@
-Round 1 DC
-----------
+Test: named-boards
+Total: 216 208
+Min: 1 1
+Max: 114 115
+Mean: 24 23
+Median: 3 3
 
-Named
------
-Total: 986, 1173, 995
-Min: 7, 7, 7
-Max: 607, 669, 495
-Mean: 109, 130, 110
-Median: 16, 16, 16
+Test: test-1-easy
+Total: 115 115
+Min: 0 0
+Max: 1 1
+Mean: 1 1
+Median: 1 1
 
+Test: test-2-medium
+Total: 332 333
+Min: 1 1
+Max: 16 16
+Mean: 3 3
+Median: 2 2
 
-Easy
-----
-Total: 1216, 722, 748
-Min: 2, 2, 5
-Max: 510, 10, 10
-Mean: 12, 7, 7
-Median: 7, 6, 7
+Test: test-3-hard
+Total: 627 596
+Min: 1 1
+Max: 106 105
+Mean: 6 5
+Median: 2 2
 
+Test: test-4-tough
+Total: 503 441
+Min: 6 6
+Max: 24 11
+Mean: 10 8
+Median: 8 8
 
-Medium
-------
-Total: 1438, 1614, 1529
-Min: 2, 3, 2
-Max: 92, 92, 70
-Mean: 14, 16, 15
-Median: 11, 13, 13
+Test: test-5-brutal
+Total: 2078 1645
+Min: 26 26
+Max: 122 57
+Mean: 51 41
+Median: 43 40
 
+Test: test-6-ridiculous
+Total: 3071 2880
+Min: 92 94
+Max: 311 183
+Mean: 153 144
+Median: 145 145
 
-Hard
-----
-Total: 3331, 2673, 2692
-Min: 3, 3, 2
-Max: 610, 480, 604
-Mean: 33, 26, 26
-Median: 10, 10, 10
-
-
-Tough
------
-Total: 2118, 2142, 1935
-Min: 17, 17, 14
-Max: 63, 63, 63
-Mean: 42, 42, 38
-Median: 224, 45, 39
-
-
-Brutal
-------
-Total: 8657, 8810, 8924
-Min: 89, 88, 136
-Max: 321, 325, 322
-Mean: 216, 220, 223
-Median: 224, 226, 222
-
-
-Ridiculous
-----------
-Total: 14967, 13822, 13868
-Min: 371, 433, 490
-Max: 1318, 930, 925
-Mean: 748, 691, 693
-Median: 743, 665, 693
