@@ -171,19 +171,26 @@ class Board:
 
     # Cleans out every cell in a set of cells.
     def undo_all_moves(self, cells):
-        options_to_recalc = []
+        cleared_values = set()
         for cell in cells:
-            optoins_to_recalc.append(self.undo_move(cell))
+            cleared_values.add(self.undo_move(cell))
 
         # Since the cells are removed sequentially, then their legal_options have to be recalculated. If cell A is removed before cell B, cell A's legal_options doesn't account for the fact that cell B will be removed.
         for cell in cells:
-            self.recalculate_options(cell, options_to_recalc)
+            self.recalculate_options(cell, cleared_values)
 
-    # Recalculates the given list of options for a given cell.
+    # Recalculates the legal options from a given list of optoins for a given cell.
     def recalculate_options(self, cell, options_to_recalc):
         for option in options_to_recalc:
             if self.is_legal_move(cell, option):
                 self.legal_options[cell][option - 1] = True
+
+    # Recalculates all legal optoins for a given list of cells.
+    def recalculate_all_options(self, cells):
+        for cell in cells:
+            for option in range(1, self.n2 + 1):
+                if self.is_legal_move(cell, option):
+                    self.legal_options[cell][option - 1] = True
 
     # Gets all the cells in a given box number.
     def get_box(self, box_num):
@@ -239,6 +246,50 @@ class Board:
             if b_cell in self.unsolved_cells and b_cell not in self.static_cells and self.is_legal_move(b_cell, value):
                 self.legal_options[b_cell][value - 1] = True
 
+    # Removes an option for all cells in given row except for cells in given box. Returns all cells that were changed.
+    def remove_options_row(self, option_to_remove, row, except_box_num):
+        except_box = self.get_box(except_box_num)
+        modified_cells = set()
+
+        for r_cell in self.get_row(row):
+            if r_cell not in except_box and r_cell in self.unsolved_cells and r_cell not in self.static_cells:
+                self.legal_options[r_cell][option_to_remove] = False
+                modified_cells.add(r_cell)
+
+        return modified_cells
+
+    # Removes an option for all cells in given col except for cells in given box. Returns all cells that were changed.
+    def remove_options_col(self, option_to_remove, col, except_box_num):
+        except_box = self.get_box(except_box_num)
+        modified_cells = set()
+
+        for c_cell in self.get_col(col):
+            if c_cell not in except_box and c_cell in self.unsolved_cells and c_cell not in self.static_cells:
+                self.legal_options[c_cell][option_to_remove] = False
+                modified_cells.add(c_cell)
+
+        return modified_cells
+
+    # Determines if a given list of cells are in the same row.
+    def in_same_row(self, cells):
+        row = cells[0][0]
+
+        for cell in cells:
+            if cell[0] != row:
+                return False
+
+        return True
+
+    # Determines if a given list of cells are in the same col.
+    def in_same_col(self, cells):
+        col = cells[0][1]
+
+        for cell in cells:
+            if cell[1] != col:
+                return False
+
+        return True
+
     # Gets the count of legal options for a given cell.
     def get_num_options(self, cell):
         count = 0
@@ -258,14 +309,27 @@ class Solver:
         pass
 
     def solveBoard(self, board):
-        # Step deduce is a list of all modified cells after doing logical deduction once.
-        step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
-        deduced_cells = step_deduce
+        deduced_boxes = self.deduce_boxes(board)
+        deduced_cols = self.deduce_cols(board)
+        deduced_rows = self.deduce_rows(board)
+
+        deduced_cells = deduced_boxes[0].union(deduced_rows[0]).union(deduced_cols[0])
+        modified_cells = deduced_boxes[1].union(deduced_rows[1]).union(deduced_cols[1])
+
+        last_length = 0
+        new_length = len(deduced_cells)
 
         # repeatedly do logical deduction until no more can be done.
-        while len(step_deduce) != 0:
-            step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
-            deduced_cells = deduced_cells.union(step_deduce)
+        while new_length - last_length > 0:
+            last_length = new_length
+            deduced_boxes = self.deduce_boxes(board)
+            deduced_cols = self.deduce_cols(board)
+            deduced_rows = self.deduce_rows(board)
+
+            deduced_cells = deduced_cells.union(deduced_boxes[0]).union(deduced_rows[0]).union(deduced_cols[0])
+            modified_cells = modified_cells.union(deduced_boxes[1].union(deduced_rows[1]).union(deduced_cols[1]))
+
+            new_length = len(deduced_cells)
 
         curr_cell = board.get_most_constrained_cell()
 
@@ -282,12 +346,15 @@ class Solver:
                         board.undo_move(curr_cell)
 
             board.undo_all_moves(deduced_cells)
+            board.recalculate_all_options(modified_cells)
+            
             return False
         else:
             ret = len(board.unsolved_cells) == 0
 
             if not ret:
                 board.undo_all_moves(deduced_cells)
+                board.recalculate_all_options(modified_cells)
 
             return ret
 
@@ -319,7 +386,7 @@ class Solver:
                     modified_cells.add(certain_cell)
                     board.make_move(certain_cell, index + 1)
 
-        return modified_cells
+        return (modified_cells, set())
 
     def deduce_cols(self, board):
         # A collection of all modified cells.
@@ -349,19 +416,24 @@ class Solver:
                     modified_cells.add(certain_cell)
                     board.make_move(certain_cell, index + 1)
 
-        return modified_cells
+        return (modified_cells, set())
 
 
     def deduce_boxes(self, board):
-        # A collection of all modified cells.
+        # A collection of all filled cells.
+        filled_cells = set()
+
+        # A collection of all cells that had their options modified.
         modified_cells = set()
 
         for box_num in range(board.n2):
             # Counts how many cells have option (i + 1) [i is index] as a legal option.
             options_count = [0 for i in range(board.n2)]
 
-            # Maps an option to the last cell that had it as a legal option.
-            last_cell_for_option = {}
+            # Maps an option to the a list of cells that had it as a legal option.
+            cells_for_option = {}
+            for option in range(1, board.n2 + 1):
+                cells_for_option[option] = []
 
             # Count options for all cells in box.
             for cell in board.get_box(box_num):
@@ -369,16 +441,24 @@ class Solver:
                     for index, is_legal in enumerate(board.get_options(cell)):
                         if is_legal:
                             options_count[index] += 1
-                            last_cell_for_option[index + 1] = cell
+                            cells_for_option[index + 1].append(cell)
 
-            # Ifyou find an option that only had one cell as its possible location, make a move there.
+            # If you find an option that only had one cell as its possible location, make a move there.
             for index, count in enumerate(options_count):
                 if count == 1:
-                    certain_cell = last_cell_for_option[index + 1]
-                    modified_cells.add(certain_cell)
+                    certain_cell = cells_for_option[index + 1][0]
+                    filled_cells.add(certain_cell)
                     board.make_move(certain_cell, index + 1)
+                elif count > 0 and count <= board.n:
+                    corresponding_cells = cells_for_option[index + 1]
+                    if board.in_same_row(corresponding_cells):
+                        modified_cells.union(board.remove_options_row(index, corresponding_cells[0][0], box_num))
+                    elif board.in_same_col(corresponding_cells):
+                        modified_cells.union(board.remove_options_col(index, corresponding_cells[0][1], box_num))
 
-        return modified_cells
+
+
+        return (filled_cells, modified_cells)
 
 
 def test_board(board):
