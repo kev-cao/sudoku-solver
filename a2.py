@@ -257,12 +257,12 @@ class Solver:
 
     def solveBoard(self, board):
         # Step deduce is a list of all modified cells after doing logical deduction once.
-        step_deduce = self.find_singles(board).union(self.deduce_boxes(board)).union(self.deduce_cols(board)).union(self.deduce_rows(board))
+        step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
         deduced_cells = step_deduce
 
         # repeatedly do logical deduction until no more can be done.
         while len(step_deduce) != 0:
-            step_deduce = self.find_singles(board).union(self.deduce_boxes(board)).union(self.deduce_cols(board)).union(self.deduce_rows(board))
+            step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
             deduced_cells = deduced_cells.union(step_deduce)
 
         curr_cell = board.get_most_constrained_cell()
@@ -289,29 +289,6 @@ class Solver:
 
             return ret
 
-    def find_singles(self, board):
-        modified_cells = set()
-
-        unsolved_cells = board.unsolved_cells.copy()
-
-        for cell in unsolved_cells:
-            num_options = 0
-            last_option = -1
-
-            for index, is_legal in enumerate(board.get_options(cell)):
-                if is_legal:
-                    num_options += 1
-                    last_option = index + 1
-
-                    if num_options > 1:
-                        break
-
-            if num_options == 1:
-                board.make_move(cell, last_option)
-                modified_cells.add(cell)
-
-        return modified_cells
-    
     def deduce_rows(self, board):
         # A collection of all modified cells.
         modified_cells = set()

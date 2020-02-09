@@ -237,24 +237,6 @@ class Board:
             if b_cell in self.unsolved_cells and b_cell not in self.static_cells and self.is_legal_move(b_cell, value):
                 self.legal_options[b_cell][value - 1] = True
 
-    # Removes all options in given list for all cells in given row except for cells in given box.
-    def remove_options_row(self, options_to_remove, row, except_box_num):
-        except_box = self.get_box(except_box_num)
-
-        for r_cell in self.get_row(row):
-            for option, should_remove in enumerate(options_to_remove):
-                if should_remove and r_cell in self.unsolved_cells and r_cell not in self.static_cells and r_cell not in except_box:
-                    self.legal_options[r_cell][option] = False
-
-    # Removes all options in a given list for all cells in given col except for cells in given box.
-    def remove_options_col(self, options_to_remove, col, except_box_num):
-        except_box = self.get_box(except_box_num)
-
-        for c_cell in self.get_col(col):
-            for option, should_remove in enumerate(options_to_remove):
-                if should_remove and c_cell in self.unsolved_cells and c_cell not in self.static_cells and c_cell not in except_box:
-                    self.legal_options[c_cell][option] = False
-
     # Gets the count of legal options for a given cell.
     def get_num_options(self, cell):
         count = 0
@@ -275,13 +257,12 @@ class Solver:
 
     def solveBoard(self, board):
         # Step deduce is a list of all modified cells after doing logical deduction once.
-        step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
+        step_deduce = self.find_singles(board).union(self.deduce_boxes(board)).union(self.deduce_cols(board)).union(self.deduce_rows(board))
         deduced_cells = step_deduce
 
         # repeatedly do logical deduction until no more can be done.
         while len(step_deduce) != 0:
-            step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
-            self.deduce_line_pair_triplet(board)
+            step_deduce = self.find_singles(board).union(self.deduce_boxes(board)).union(self.deduce_cols(board)).union(self.deduce_rows(board))
             deduced_cells = deduced_cells.union(step_deduce)
 
         curr_cell = board.get_most_constrained_cell()
@@ -308,6 +289,29 @@ class Solver:
 
             return ret
 
+    def find_singles(self, board):
+        modified_cells = set()
+
+        unsolved_cells = board.unsolved_cells.copy()
+
+        for cell in unsolved_cells:
+            num_options = 0
+            last_option = -1
+
+            for index, is_legal in enumerate(board.get_options(cell)):
+                if is_legal:
+                    num_options += 1
+                    last_option = index + 1
+
+                    if num_options > 1:
+                        break
+
+            if num_options == 1:
+                board.make_move(cell, last_option)
+                modified_cells.add(cell)
+
+        return modified_cells
+    
     def deduce_rows(self, board):
         # A collection of all modified cells.
         modified_cells = set()
@@ -397,68 +401,6 @@ class Solver:
 
         return modified_cells
 
-    # Eliminates options from other rows/cols if it sees a line of options within a box. e.g. The middle column of a box has all the twos of that box. So we know that two must go in that column, even if we do not know what cell it is in. This should only be called after deduce col/row/box.
-    def deduce_line_pair_triplet(self, board):
-        for box_num in range(board.n2):
-            # First check for pair/triplet in each row of the box.
-            first_row = (box_num // board.n) * board.n
-            first_col = (box_num % board.n) * board.n
-            for row in range(board.n):
-                row_num = first_row + row
-
-                # Contains all options that exist only in this row.
-                distinct_options = [False for i in range(board.n2)]
-
-                # Mark down options that exist in this row.
-                for col in range(board.n):
-                    cell = (row_num, first_col + col)
-
-                    for index, is_legal in enumerate(board.get_options(cell)):
-                        distinct_options[index] = is_legal
-
-
-                # Then check the other rows and if that option exists in the other rows, unmark those options.
-                for other_row in range(board.n):
-                    if other_row != row:
-                        other_row_num = first_row + other_row
-
-                        for col in range(board.n):
-                            cell = (other_row_num, first_col + col)
-
-                            for index, is_legal in enumerate(board.get_options(cell)):
-                                distinct_options[index] = distinct_options[index] and not is_legal
-
-                # Remove all options in distinct_options from cells in other boxes on the same row.
-                board.remove_options_row(distinct_options, row_num, box_num)
-
-            # Do the same for each col of the box.
-            for col in range(board.n):
-                col_num = first_col + col
-
-                # Contains all options that exist only in this col.
-                distinct_options = [False for i in range(board.n2)]
-
-                # Mark down options that exist in this col.
-                for row in range(board.n):
-                    cell = (first_row + row, col_num)
-
-                    for index, is_legal in enumerate(board.get_options(cell)):
-                        distinct_options[index] = is_legal
-
-
-                # Then check the other cols and if that option exists in the other cols, unmark those options.
-                for other_col in range(board.n):
-                    if other_col != col:
-                        other_col_num = first_col + other_col
-
-                        for row in range(board.n):
-                            cell = (first_row + row, other_col_num)
-
-                            for index, is_legal in enumerate(board.get_options(cell)):
-                                distinct_options[index] = distinct_options[index] and not is_legal
-
-                # Remove all options in distinct_options from cells in other boxes on the same row.
-                board.remove_options_col(distinct_options, col_num, box_num)
 
 def test_board(board):
     for row in range(board.n2):

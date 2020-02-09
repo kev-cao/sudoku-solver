@@ -1,4 +1,5 @@
 from sys import stdin
+import sys
 import re
 
 class Test_Result:
@@ -46,68 +47,87 @@ class Test_Result:
         for time in self.total_times:
             ret += " %d" % time
 
-        ret += "\nMin:"
+        ret += " | Average: %.2f ms\nMin:" % self.average_total()
 
         for time in self.min_times:
             ret += " %d" % time
 
-        ret += "\nMax:"
+        ret += " | Average: %.2f ms\nMax:" % self.average_min()
 
         for time in self.max_times:
             ret += " %d" % time
 
-        ret += "\nMean:"
+        ret += " | Average: %.2f ms\nMean:" % self.average_max()
 
         for time in self.mean_times:
             ret += " %d" % time
 
-        ret += "\nMedian:"
+        ret += " | Average: %.2f ms\nMedian:" % self.average_mean()
 
         for time in self.median_times:
             ret += " %d" % time
 
-        ret += "\n\n"
+        ret += " | Average: %.2f ms\n\n" % self.average_median()
 
         return ret
 
 if __name__ == "__main__":
-    save_file = open("stats.txt", "r")
     test_results_map = {}
 
-    lines = save_file.readlines()
-    lines = [line[:-1] for line in lines]
+    if len(sys.argv) != 2:
+        raise Exception("Provide the file name to read/write to as an argument.")
 
-    step = 0
+    filename = sys.argv[1]
 
-    test_result = None
+    try:
+        save_file = open("filename", "r")
 
-    for line in lines:
-        if step == 0 and line != "\n":
-            name = line[6:]
-            test_result = Test_Result(name)
-        elif step == 1:
-            total_times = [int(d) for d in line[7:].split(' ')]
-            test_result.total_times = total_times
-        elif step == 2:
-            min_times = [int(d) for d in line[5:].split(' ')]
-            test_result.min_times = min_times
-        elif step == 3:
-            max_times = [int(d) for d in line[5:].split(' ')]
-            test_result.max_times = max_times
-        elif step == 4:
-            mean_times = [int(d) for d in line[6:].split(' ')]
-            test_result.mean_times = mean_times
-        elif step == 5:
-            median_times = [int(d) for d in line[8:].split(' ')]
-            test_result.median_times = median_times
-        elif step == 6:
+        lines = save_file.readlines()
+
+        test_result = None
+
+        name_pattern = re.compile('Test: (.+)')
+        total_pattern = re.compile('Total: ([\d ]+) |')
+        min_pattern = re.compile('Min: ([\d ]+) |')
+        max_pattern = re.compile('Max: ([\d ]+) |')
+        mean_pattern = re.compile('Mean: ([\d ]+) |')
+        median_pattern = re.compile('Median: ([\d ]+) |')
+
+        for line in lines:
+            if match := name_pattern.match(line):
+                if test_result is not None:
+                    test_results_map[test_result.name] = test_result
+
+                test_result = Test_Result(match.group(1))
+
+            elif match := total_pattern.match(line):
+                total_times = [int(d) for d in match.group(1).split(' ')]
+                test_result.total_times = total_times
+
+            elif match := min_pattern.match(line):
+                min_times = [int(d) for d in match.group(1).split(' ')]
+                test_result.min_times = min_times
+
+            elif match := max_pattern.match(line):
+                max_times = [int(d) for d in match.group(1).split(' ')]
+                test_result.max_times = max_times
+
+            elif match := mean_pattern.match(line):
+                mean_times = [int(d) for d in match.group(1).split(' ')]
+                test_result.mean_times = mean_times
+
+            elif match := median_pattern.match(line):
+                median_times = [int(d) for d in match.group(1).split(' ')]
+                test_result.median_times = median_times
+
+        if test_result is not None:
             test_results_map[test_result.name] = test_result
 
-        step = (step + 1) % 7
+        save_file.close()
+    except IOError:
+        print("Creating new %s." % filename)
 
-    save_file.close()
-    save_file = open("stats.txt", "w")
-    step = 0
+    save_file = open("filename", "w")
 
     name_pattern = re.compile('.*Test: (.+)')
     total_pattern = re.compile('.*Total:[^\d]*(\d+)')

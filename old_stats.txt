@@ -1,0 +1,49 @@
+Test: named-boards
+Total: 233 229 228 234 226 | Average: 230.00 ms
+Min: 1 1 1 1 1 | Average: 1.00 ms
+Max: 130 127 126 129 125 | Average: 127.40 ms
+Mean: 25 25 25 26 25 | Average: 25.20 ms
+Median: 4 3 3 3 3 | Average: 3.20 ms
+
+Test: test-1-easy
+Total: 145 148 147 148 144 | Average: 146.40 ms
+Min: 1 1 1 1 1 | Average: 1.00 ms
+Max: 2 3 2 2 2 | Average: 2.20 ms
+Mean: 1 1 1 1 1 | Average: 1.00 ms
+Median: 1 1 1 1 1 | Average: 1.00 ms
+
+Test: test-2-medium
+Total: 354 372 364 367 363 | Average: 364.00 ms
+Min: 1 1 1 1 1 | Average: 1.00 ms
+Max: 17 19 18 18 18 | Average: 18.00 ms
+Mean: 3 3 3 3 3 | Average: 3.00 ms
+Median: 2 3 3 3 3 | Average: 2.80 ms
+
+Test: test-3-hard
+Total: 620 649 629 644 627 | Average: 633.80 ms
+Min: 1 1 1 1 1 | Average: 1.00 ms
+Max: 118 127 123 126 122 | Average: 123.20 ms
+Mean: 6 6 6 6 6 | Average: 6.00 ms
+Median: 2 2 2 2 2 | Average: 2.00 ms
+
+Test: test-4-tough
+Total: 459 650 458 474 459 | Average: 500.00 ms
+Min: 7 7 7 7 7 | Average: 7.00 ms
+Max: 12 23 12 13 12 | Average: 14.40 ms
+Mean: 9 13 9 9 9 | Average: 9.80 ms
+Median: 9 11 9 9 9 | Average: 9.40 ms
+
+Test: test-5-brutal
+Total: 1999 2247 2005 2075 1999 | Average: 2065.00 ms
+Min: 41 42 41 43 41 | Average: 41.60 ms
+Max: 64 76 63 67 63 | Average: 66.60 ms
+Mean: 49 56 50 51 49 | Average: 51.00 ms
+Median: 50 53 50 52 51 | Average: 51.20 ms
+
+Test: test-6-ridiculous
+Total: 3238 3406 3252 3369 3224 | Average: 3297.80 ms
+Min: 142 145 142 147 140 | Average: 143.20 ms
+Max: 188 243 185 193 184 | Average: 198.60 ms
+Mean: 161 170 162 168 161 | Average: 164.40 ms
+Median: 157 166 159 164 157 | Average: 160.60 ms
+
