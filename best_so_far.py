@@ -261,7 +261,7 @@ class Solver:
         deduced_cells = step_deduce
 
         # repeatedly do logical deduction until no more can be done.
-        while len(step_deduce) != 0:
+        while len(step_deduce) > 0:
             step_deduce = self.find_singles(board).union(self.deduce_boxes(board)).union(self.deduce_cols(board)).union(self.deduce_rows(board))
             deduced_cells = deduced_cells.union(step_deduce)
 
@@ -311,7 +311,8 @@ class Solver:
                 modified_cells.add(cell)
 
         return modified_cells
-    
+
+
     def deduce_rows(self, board):
         # A collection of all modified cells.
         modified_cells = set()
@@ -436,7 +437,7 @@ def test_board(board):
 
 if __name__ == "__main__":
     # change this to the input file that you'd like to test
-    board = Board('tests/test-6-ridiculous/04.csv')
+    board = Board('tests/test-6-ridiculous/02.csv')
     s = Solver()
     #s.solveBoard(board)
     cProfile.run("s.solveBoard(board)", sort="tottime")

@@ -36,10 +36,6 @@ class Board:
 
         # A mapping from a cell to the valid options for that cell. Those valid options are stored in a list of size n2.
         self.legal_options = None
-
-        # A mapping from an option to amount of times it appears on the board.
-        self.options_count = None
-
         self.load_sudoku(filename)
 
     # Loads the sudoku board from the given file.
@@ -63,7 +59,6 @@ class Board:
 
                     self.unsolved_cells = set(itertools.product(range(self.n2), range(self.n2)))
                     self.legal_options = {}
-                    self.options_count = [0 for i in range(self.n2)]
                     self.static_cells = set()
 
                     # Add all cells to the correct row/col/box section.
@@ -97,7 +92,6 @@ class Board:
                         self.vals_in_boxes[self.get_box_num((row_num, col_num))].add(val)
                         self.unsolved_cells.remove((row_num, col_num))
                         self.static_cells.add((row_num, col_num))
-                        self.options_count[val - 1] += 1
 
 
             # Fill in legal_options for every unsolved cell.
@@ -161,7 +155,6 @@ class Board:
             self.vals_in_boxes[self.get_box_num(cell)].add(value)
             self.unsolved_cells.remove(cell)
             self.update_options_fill(cell, value)
-            self.options_count[value - 1] += 1
 
 
     # Cleans out a given cell and makes it empty.
@@ -174,24 +167,21 @@ class Board:
             self.vals_in_boxes[self.get_box_num(cell)].discard(prev_val)
             self.unsolved_cells.add(cell)
             self.update_options_clear(cell, prev_val)
-            self.options_count[prev_val - 1] -= 1
-            return prev_val
 
     # Cleans out every cell in a set of cells.
     def undo_all_moves(self, cells):
-        options_to_recalc = []
         for cell in cells:
-            options_to_recalc.append(self.undo_move(cell))
+            self.undo_move(cell)
 
         # Since the cells are removed sequentially, then their legal_options have to be recalculated. If cell A is removed before cell B, cell A's legal_options doesn't account for the fact that cell B will be removed.
         for cell in cells:
-            self.recalculate_options(cell, options_to_recalc)
+            self.recalculate_options(cell)
 
-    # Recalculates the given list of options for a given cell.
-    def recalculate_options(self, cell, options_to_recalc):
-        for option in options_to_recalc:
-            if self.is_legal_move(cell, option):
-                self.legal_options[cell][option - 1] = True
+    # Recalculates the legal options for a given cell.
+    def recalculate_options(self, cell):
+        for index in range(self.n2):
+            if self.is_legal_move(cell, index + 1):
+                self.legal_options[cell][index] = True
 
     # Gets all the cells in a given box number.
     def get_box(self, box_num):
@@ -261,22 +251,10 @@ class Board:
     def get_options(self, cell):
         return self.legal_options[cell]
 
-
-    # Sorts a given list of options from least frequently occurrently to most freqeuntly occurring.
-    def sort_most_occurring_options(self, options):
-        # Maps options to their count.
-        opt_count = {}
-        for index, is_legal in enumerate(options):
-            if is_legal:
-                opt_count[index + 1] = self.options_count[index]
-
-        sorted_options = []
-        for pair in sorted(opt_count.items(), key = lambda x : x[1]):
-            sorted_options.append(pair[0])
-
-        return sorted_options
-
 class Solver:
+    def __init__(self):
+        pass
+
     def solveBoard(self, board):
         # Step deduce is a list of all modified cells after doing logical deduction once.
         step_deduce = self.deduce_boxes(board).union(self.deduce_cols(board)).union(self.deduce_rows(board))
@@ -292,14 +270,14 @@ class Solver:
         if curr_cell is not None:
             options = board.get_options(curr_cell)
 
+            for index, is_legal in enumerate(options):
+                if is_legal:
+                    board.make_move(curr_cell, index + 1)
 
-            for max_option in board.sort_most_occurring_options(options):
-                board.make_move(curr_cell, max_option)
-
-                if self.solveBoard(board):
-                    return True
-                else:
-                    board.undo_move(curr_cell)
+                    if self.solveBoard(board):
+                        return True
+                    else:
+                        board.undo_move(curr_cell)
 
             board.undo_all_moves(deduced_cells)
             return False
