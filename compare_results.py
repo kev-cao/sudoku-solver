@@ -28,31 +28,46 @@ if __name__ == "__main__":
                 old_total = float(old_match.group(1))
                 new_total = float(total_pattern.match(new_current_line).group(1))
 
-                print("Total: %.2f%% time taken." % (new_total / old_total))
+                if old_total == 0:
+                    print("Total: Old total was 0. New total is %.2f" % new_total)
+                else:
+                    print("Total: %.2f%% time taken." % ((new_total / old_total) * 100))
 
             elif old_match := min_pattern.match(old_current_line):
                 old_min = float(old_match.group(1))
                 new_min = float(min_pattern.match(new_current_line).group(1))
 
-                print("Min: %.2f%% time taken." % (new_min / old_min))
+                if old_min == 0:
+                    print("Min: Old min was 0. New min is %.2f" % new_min)
+                else:
+                    print("Min: %.2f%% time taken." % ((new_min / old_min) * 100))
 
             elif old_match := max_pattern.match(old_current_line):
                 old_max = float(old_match.group(1))
                 new_max = float(max_pattern.match(new_current_line).group(1))
 
-                print("Max: %.2f%% time taken." % (new_max / old_max))
+                if old_max == 0:
+                    print("Max: Old max was 0. New max is %.2f" % new_max)
+                else:
+                    print("Max: %.2f%% time taken." % ((new_max / old_max) * 100))
 
             elif old_match := mean_pattern.match(old_current_line):
                 old_mean = float(old_match.group(1))
                 new_mean = float(mean_pattern.match(new_current_line).group(1))
 
-                print("Mean: %.2f%% time taken." % (new_mean / old_mean))
+                if old_mean == 0:
+                    print("Mean: Old mean was 0. New mean is %.2f" % new_mean)
+                else:
+                    print("Mean: %.2f%% time taken." % ((new_mean / old_mean) * 100))
 
             elif old_match := median_pattern.match(old_current_line):
                 old_median = float(old_match.group(1))
                 new_median = float(median_pattern.match(new_current_line).group(1))
 
-                print("Median: %.2f%% time taken.\n\n" % (new_median / old_median))
+                if old_median == 0:
+                    print("Median: Old median was 0. New median is %.2f\n" % new_median)
+                else:
+                    print("Median: %.2f%% time taken.\n" % ((new_median / old_median) * 100))
 
     except IOError:
         print("Did not have both improved_stats.txt and old_stats.txt")

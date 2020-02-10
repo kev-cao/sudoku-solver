@@ -1,49 +1,49 @@
 Test: named-boards
-Total: 221 223 222 222 223 215 224 220 217 222 | Average: 220.90 ms
+Total: 228 226 228 224 228 225 226 225 227 226 | Average: 226.30 ms
 Min: 1 1 1 1 1 1 1 1 1 1 | Average: 1.00 ms
-Max: 124 124 123 123 124 119 124 122 119 123 | Average: 122.50 ms
-Mean: 24 24 24 24 24 23 24 24 24 24 | Average: 23.90 ms
+Max: 128 125 127 125 126 124 125 124 126 126 | Average: 125.60 ms
+Mean: 25 25 25 24 25 25 25 25 25 25 | Average: 24.90 ms
 Median: 3 3 3 3 3 3 3 3 3 3 | Average: 3.00 ms
 
 Test: test-1-easy
-Total: 120 124 123 123 125 120 124 122 122 124 | Average: 122.70 ms
-Min: 0 1 0 1 1 0 1 1 1 1 | Average: 0.70 ms
-Max: 1 1 1 1 1 1 1 1 1 1 | Average: 1.00 ms
+Total: 144 145 145 144 146 144 145 144 145 144 | Average: 144.60 ms
+Min: 1 1 1 1 1 1 1 1 1 1 | Average: 1.00 ms
+Max: 2 2 2 2 2 2 2 2 2 2 | Average: 2.00 ms
 Mean: 1 1 1 1 1 1 1 1 1 1 | Average: 1.00 ms
 Median: 1 1 1 1 1 1 1 1 1 1 | Average: 1.00 ms
 
 Test: test-2-medium
-Total: 345 351 348 352 352 339 357 352 345 351 | Average: 349.20 ms
+Total: 355 357 356 356 359 356 360 354 357 357 | Average: 356.70 ms
 Min: 1 1 1 1 1 1 1 1 1 1 | Average: 1.00 ms
-Max: 17 17 17 17 17 17 18 17 17 17 | Average: 17.10 ms
+Max: 17 18 17 18 18 18 18 17 17 17 | Average: 17.50 ms
 Mean: 3 3 3 3 3 3 3 3 3 3 | Average: 3.00 ms
-Median: 2 2 2 2 2 2 2 2 2 2 | Average: 2.00 ms
+Median: 3 3 3 3 3 2 3 2 3 2 | Average: 2.70 ms
 
 Test: test-3-hard
-Total: 611 630 629 629 631 611 636 622 619 635 | Average: 625.30 ms
+Total: 616 618 619 621 624 614 622 612 620 620 | Average: 618.60 ms
 Min: 1 1 1 1 1 1 1 1 1 1 | Average: 1.00 ms
-Max: 109 112 112 112 113 109 113 111 109 114 | Average: 111.40 ms
+Max: 118 118 119 119 120 118 119 117 120 119 | Average: 118.70 ms
 Mean: 6 6 6 6 6 6 6 6 6 6 | Average: 6.00 ms
 Median: 2 2 2 2 2 2 2 2 2 2 | Average: 2.00 ms
 
 Test: test-4-tough
-Total: 435 449 447 448 449 435 449 448 446 454 | Average: 446.00 ms
-Min: 6 7 7 7 7 6 7 7 7 7 | Average: 6.80 ms
-Max: 11 11 11 11 11 11 11 11 11 11 | Average: 11.00 ms
-Mean: 8 8 8 8 8 8 8 8 8 9 | Average: 8.10 ms
-Median: 8 8 8 8 8 8 8 8 8 8 | Average: 8.00 ms
+Total: 452 453 456 454 457 453 458 452 458 455 | Average: 454.80 ms
+Min: 7 7 7 7 7 7 7 7 7 7 | Average: 7.00 ms
+Max: 12 12 12 12 12 12 12 12 12 12 | Average: 12.00 ms
+Mean: 9 9 9 9 9 9 9 9 9 9 | Average: 9.00 ms
+Median: 9 9 9 9 9 9 9 9 9 9 | Average: 9.00 ms
 
 Test: test-5-brutal
-Total: 1633 1683 1676 1684 1688 1633 1673 1655 1659 1703 | Average: 1668.70 ms
-Min: 26 27 27 27 27 26 27 26 26 27 | Average: 26.60 ms
-Max: 51 54 53 54 54 52 53 53 53 54 | Average: 53.10 ms
-Mean: 40 42 41 42 42 40 41 41 41 42 | Average: 41.20 ms
-Median: 40 41 41 41 41 40 41 40 40 41 | Average: 40.60 ms
+Total: 1975 1973 1985 1966 1986 1971 1990 1967 1989 1971 | Average: 1977.30 ms
+Min: 40 41 41 41 41 40 41 40 41 40 | Average: 40.60 ms
+Max: 63 62 65 62 63 62 63 63 64 62 | Average: 62.90 ms
+Mean: 49 49 49 49 49 49 49 49 49 49 | Average: 49.00 ms
+Median: 50 49 49 49 49 49 50 49 50 49 | Average: 49.30 ms
 
 Test: test-6-ridiculous
-Total: 2807 2909 2893 2908 2896 2849 2905 2821 2855 2971 | Average: 2881.40 ms
-Min: 92 96 94 96 95 93 95 92 93 97 | Average: 94.30 ms
-Max: 177 184 185 184 182 180 184 177 181 189 | Average: 182.30 ms
-Mean: 140 145 144 145 144 142 145 141 142 148 | Average: 143.60 ms
-Median: 137 143 142 143 143 140 143 139 141 145 | Average: 141.60 ms
+Total: 3197 3205 3211 3210 3217 3203 3239 3181 3238 3186 | Average: 3208.70 ms
+Min: 140 140 140 142 141 140 142 140 142 140 | Average: 140.70 ms
+Max: 182 182 183 182 183 183 184 181 184 181 | Average: 182.50 ms
+Mean: 159 160 160 160 160 160 161 159 161 159 | Average: 159.90 ms
+Median: 156 156 156 157 156 155 157 154 157 154 | Average: 155.80 ms
 
