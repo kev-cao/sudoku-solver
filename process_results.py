@@ -1,4 +1,3 @@
-from sys import stdin
 import sys
 import re
 
@@ -80,18 +79,17 @@ if __name__ == "__main__":
     filename = sys.argv[1]
 
     try:
-        save_file = open("filename", "r")
-
+        save_file = open(filename, "r")
         lines = save_file.readlines()
 
         test_result = None
 
         name_pattern = re.compile('Test: (.+)')
-        total_pattern = re.compile('Total: ([\d ]+) |')
-        min_pattern = re.compile('Min: ([\d ]+) |')
-        max_pattern = re.compile('Max: ([\d ]+) |')
-        mean_pattern = re.compile('Mean: ([\d ]+) |')
-        median_pattern = re.compile('Median: ([\d ]+) |')
+        total_pattern = re.compile('Total: ([\d ]+) \|')
+        min_pattern = re.compile('Min: ([\d ]+) \|')
+        max_pattern = re.compile('Max: ([\d ]+) \|')
+        mean_pattern = re.compile('Mean: ([\d ]+) \|')
+        median_pattern = re.compile('Median: ([\d ]+) \|')
 
         for line in lines:
             if match := name_pattern.match(line):
@@ -127,7 +125,7 @@ if __name__ == "__main__":
     except IOError:
         print("Creating new %s." % filename)
 
-    save_file = open("filename", "w")
+    save_file = open(filename, "w")
 
     name_pattern = re.compile('.*Test: (.+)')
     total_pattern = re.compile('.*Total:[^\d]*(\d+)')
@@ -138,7 +136,7 @@ if __name__ == "__main__":
 
     current_test = None
 
-    for line in stdin:
+    for line in sys.stdin:
         if match := name_pattern.match(line):
             name = match.group(1)
             if name in test_results_map:
