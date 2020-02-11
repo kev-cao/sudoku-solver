@@ -8,11 +8,6 @@ import cProfile
 Upon trying out storing the valid options for a cell in a mapping data structures, I noticed about an 80% decrease in running time. However, it still is not significant enough to actually solve harder problems. With that in mind, I want to try implementing a more "human" logic to this. Whenever I do a sudoku board, and I don't find a cell with a single valid option, I check the other cells in the row/col/box and see if there is a shared value they cannot store. If they cannot store that shared value, then that cell must store the value. For example, in a 9x9 board, every row/col/box must store a 5. If cell X has multiple options including 5, and all the other cells in the same row/box/col do not have 5 as a valid option, then cell X must contain 5 and I can ignore all the other options.
 
 Whenever a random value is attempted, then try out the logical deduction on the current state of the board over and over again until no more deductions can be made and return a list of all cells that were modified. If the current path fails, then undo all modifications.
-
-New modifications after round 1:
-- Added a method to find "singles", cells that only have one option.
-- cells_in_rows/boxes/cols now maps to a set for O(1) access instead of a list.
-- Added a dictionary mapping a cell to the number of options it has. This is to reduce the time complexity of get_most_constrained_cell()
  '''
 
 class Board:
